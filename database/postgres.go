@@ -2,38 +2,34 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"log"
 
 	"github.com/AndresLince/go-rest-websockets/models"
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 type PostgresRepository struct {
-	db *sql.DB
+	db *pgxpool.Pool
 }
 
 func NewPostgresRepository(url string) (*PostgresRepository, error) {
-	db, err := sql.Open("postgres", url)
+	db, err := pgxpool.Connect(context.Background(), url)
 	if err != nil {
 		return nil, err
 	}
-	return &PostgresRepository{db}, nil
+	return &PostgresRepository{db: db}, nil
 }
 
 func (repo *PostgresRepository) InsertUser(ctx context.Context, user *models.User) error {
-	_, err := repo.db.ExecContext(ctx, "INSERT INTO users (id, email, password) VALUES($1, $2, $3)", user.Id, user.Email, user.Password)
+	_, err := repo.db.Exec(ctx, "INSERT INTO users (id, email, password) VALUES($1, $2, $3)", user.Id, user.Email, user.Password)
 	return err
 }
 
 func (repo *PostgresRepository) GetUserById(ctx context.Context, id string) (*models.User, error) {
-	rows, err := repo.db.QueryContext(ctx, "SELECT id, email FROM users WHERE id = $i", id)
-	defer func() {
-		err = rows.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
+	rows, err := repo.db.Query(ctx, "SELECT id, email FROM users WHERE id = $1", id)
+	if err != nil {
+		return nil, err
+	}
 	var user = models.User{}
 	for rows.Next() {
 		err = rows.Scan(&user.Id, &user.Email)
@@ -48,16 +44,13 @@ func (repo *PostgresRepository) GetUserById(ctx context.Context, id string) (*mo
 	return &user, nil
 }
 func (repo *PostgresRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
-	rows, err := repo.db.QueryContext(ctx, "SELECT id, email, password FROM users WHERE email = $i", email)
-	defer func() {
-		err = rows.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
+	rows, err := repo.db.Query(ctx, "SELECT id, email, password FROM users WHERE email = $1", email)
+	if err != nil {
+		return nil, err
+	}
 	var user = models.User{}
 	for rows.Next() {
-		err = rows.Scan(&user.Id, &user.Email)
+		err = rows.Scan(&user.Id, &user.Email, &user.Password)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -67,8 +60,4 @@ func (repo *PostgresRepository) GetUserByEmail(ctx context.Context, email string
 		log.Fatal(err)
 	}
 	return &user, nil
-}
-
-func (repo PostgresRepository) Close() error {
-	return repo.db.Close()
 }
