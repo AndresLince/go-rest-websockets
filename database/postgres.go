@@ -66,3 +66,22 @@ func (repo *PostgresRepository) InsertPost(ctx context.Context, post *models.Pos
 	_, err := repo.db.Exec(ctx, "INSERT INTO posts (id, post_content, user_id) VALUES($1, $2, $3)", post.Id, post.PostContent, post.UserId)
 	return err
 }
+
+func (repo *PostgresRepository) GetPostById(ctx context.Context, id string) (*models.Post, error) {
+	rows, err := repo.db.Query(ctx, "SELECT id, post_content, created_at, user_id FROM posts WHERE id = $1", id)
+	if err != nil {
+		return nil, err
+	}
+	var post = models.Post{}
+	for rows.Next() {
+		err = rows.Scan(&post.Id, &post.PostContent, &post.CreatedAt, &post.UserId)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &post, nil
+}
