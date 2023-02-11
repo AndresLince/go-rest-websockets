@@ -63,6 +63,6 @@ func (repo *PostgresRepository) GetUserByEmail(ctx context.Context, email string
 }
 
 func (repo *PostgresRepository) InsertPost(ctx context.Context, post *models.Post) error {
-	_, err := repo.db.Exec(ctx, "INSERT INTO post (id, post_content, user_id) VALUES($1, $2, $3)", post.Id, post.PostContent, post.UserId)
+	_, err := repo.db.Exec(ctx, "INSERT INTO posts (id, post_content, user_id) VALUES($1, $2, $3)", post.Id, post.PostContent, post.UserId)
 	return err
 }
