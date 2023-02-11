@@ -10,6 +10,7 @@ import (
 	"github.com/AndresLince/go-rest-websockets/repository"
 	"github.com/AndresLince/go-rest-websockets/server"
 	"github.com/golang-jwt/jwt"
+	"github.com/gorilla/mux"
 	"github.com/segmentio/ksuid"
 )
 
@@ -62,5 +63,17 @@ func InsertPostHandler(s server.Server) http.HandlerFunc {
 			fmt.Println("Entra4")
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+	}
+}
+
+func GetPostByIdHandler(s server.Server) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		post, err := repository.GetPostById(r.Context(), params["id"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(post)
 	}
 }
