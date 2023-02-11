@@ -5,7 +5,7 @@ CREATE TABLE users(
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
-)
+);
 
 DROP TABLE IF EXISTS posts;
 
@@ -15,4 +15,4 @@ CREATE TABLE posts(
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     user_id VARCHAR(32) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
-)
+);
