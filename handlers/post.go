@@ -75,6 +75,10 @@ func GetPostByIdHandler(s server.Server) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
+		if len(post.Id) == 0 {
+			http.Error(w, "Bad request", http.StatusNotFound)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(post)
 	}
