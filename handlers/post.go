@@ -91,18 +91,27 @@ func UpdatePostHandler(s server.Server) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
-		if claims, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
+		if _, ok := token.Claims.(*models.AppClaims); ok && token.Valid {
+			post, err := repository.GetPostById(r.Context(), params["id"])
+
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			if len(post.Id) == 0 {
+				http.Error(w, "Bad request", http.StatusBadRequest)
+				return
+			}
 			var postRequest = UpsertPostRequest{}
 			if err := json.NewDecoder(r.Body).Decode(&postRequest); err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			post := models.Post{
-				Id:          params["id"],
-				PostContent: postRequest.PostContent,
-				UserId:      claims.UserId,
-			}
-			err = repository.UpdatePost(r.Context(), &post)
+
+			post.PostContent = postRequest.PostContent
+
+			err = repository.UpdatePost(r.Context(), post)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
