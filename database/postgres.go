@@ -90,3 +90,8 @@ func (repo *PostgresRepository) UpdatePost(ctx context.Context, post *models.Pos
 	_, err := repo.db.Exec(ctx, "UPDATE posts SET post_content = $1 WHERE id = $2 and user_id = $3", post.PostContent, post.Id, post.UserId)
 	return err
 }
+
+func (repo *PostgresRepository) DeletePost(ctx context.Context, id string, userId string) error {
+	_, err := repo.db.Exec(ctx, "DELETE from posts WHERE id = $1 and user_id = $2", id, userId)
+	return err
+}
