@@ -10,6 +10,7 @@ import (
 	"github.com/AndresLince/go-rest-websockets/repository"
 	"github.com/AndresLince/go-rest-websockets/websocket"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 type Config struct {
@@ -58,6 +59,7 @@ func NewServer(ctx context.Context, config *Config) (*Broker, error) {
 func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	b.router = mux.NewRouter()
 	binder(b, b.router)
+	handler := cors.Default().Handler(b.router)
 	repo, err := database.NewPostgresRepository(b.config.DatabaseUrl)
 	if err != nil {
 		log.Fatal(err)
@@ -65,7 +67,7 @@ func (b *Broker) Start(binder func(s Server, r *mux.Router)) {
 	go b.hub.Run()
 	repository.SetRepository(repo)
 	log.Println("Starting server on addr", b.config.Addr)
-	err = http.ListenAndServe(b.config.Addr, b.router)
+	err = http.ListenAndServe(b.config.Addr, handler)
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
